@@ -1,7 +1,3 @@
-/** 
-* @version 2.1.8
-* @license MIT
-*/
 (function (ng, undefined){
     'use strict';
 
@@ -504,10 +500,20 @@ ng.module('smart-table')
       link: {
 
         pre: function (scope, element, attrs, ctrl) {
+            var _stPipe = scope.stPipe;
+
+            for(var prop in scope.$parent) {
+                if(scope.$parent.hasOwnProperty(prop)) {
+                    if(((prop + '').indexOf('$') < 0) && ng.isFunction(scope.stPipe)
+                        && ng.isFunction(scope.$parent[prop][scope.stPipe.name])) {
+                        _stPipe = angular.bind(scope.$parent[prop], scope.stPipe);
+                    }
+                }
+            }
 
           var pipePromise = null;
 
-          if (ng.isFunction(scope.stPipe)) {
+          if (ng.isFunction(_stPipe)) {
             ctrl.preventPipeOnWatch();
             ctrl.pipe = function () {
 
@@ -516,7 +522,7 @@ ng.module('smart-table')
               }
 
               pipePromise = $timeout(function () {
-                scope.stPipe(ctrl.tableState(), ctrl);
+                _stPipe(ctrl.tableState(), ctrl);
               }, config.pipe.delay);
 
               return pipePromise;
